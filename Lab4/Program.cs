@@ -9,20 +9,15 @@ namespace Lab4
         private static int value = 0;
         private static bool showMul = false;
         private static bool showSum = false;
-        static CancellationTokenSource tokenSource = new CancellationTokenSource();
-        CancellationToken ct = tokenSource.Token;
+        private static bool isRunning = true;
+        
         
         
         // умножение
         static void Multiply()
         {
-            while (true)
+            while (isRunning)
             {
-                if (tokenSource.IsCancellationRequested)
-                {
-                    Console.WriteLine("Operation mul is cancelled");
-                    return;
-                }
                 if (showMul)
                 {
                     Console.WriteLine($"multiply = {value}");
@@ -32,7 +27,7 @@ namespace Lab4
                 Thread.Sleep(3000);
             }
         }
-        static async void MultiplyAsync()
+        static async Task MultiplyAsync()
         {
              await Task.Run(()=> Multiply());        
         }
@@ -41,13 +36,8 @@ namespace Lab4
         // сложение
         static void Sum()
         {
-            while (true)
+            while (isRunning)
             {
-                if (tokenSource.IsCancellationRequested)
-                {
-                    Console.WriteLine("Operation sum is cancelled");
-                    return;
-                }
                 if (showSum)
                 {
                     Console.WriteLine($"sum = {value}");
@@ -58,18 +48,18 @@ namespace Lab4
             }
         }
         
-        static async void SumAsync()
+        static async Task SumAsync()
         {
             await Task.Run(()=> Sum());        
         }
         
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            SumAsync();
-            MultiplyAsync();
+            Task sum = SumAsync();
+            Task mul = MultiplyAsync();
             Console.WriteLine("Input command: show or stop");
-            while (true)
+            while (isRunning)
             {
                 string command = Console.ReadLine();
                 if (command == "show")
@@ -79,8 +69,9 @@ namespace Lab4
                 }
                 else if (command == "stop")
                 {
-                    Console.WriteLine("ok stop");
-                    tokenSource.Cancel();
+                    isRunning = false;
+                    await sum;
+                    await mul;
                 }
             }
         }
